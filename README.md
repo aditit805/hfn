@@ -3,12 +3,18 @@
 A calm, phone-friendly check-in page. People add their names once; after that they just tap their name and press **Check in**. Each check-in is submitted to the *Sunday Attendance* Google Form.
 
 - **The page** (`index.html`) is hosted free on GitHub Pages: no Google banner, no sign-in.
-- **The sender** (`apps-script/Code.gs`) runs on Google Apps Script and submits to the Google Form.
-- **The link between them** lives in `config.js`.
+- **It works out of the box.** Each check-in is sent straight to the Google Form.
+- **Optional upgrade:** route check-ins through Google Apps Script (`apps-script/Code.gs`) by adding its link to `config.js`.
+
+| | Direct to form (default) | Through Apps Script (optional) |
+|---|---|---|
+| Setup | None | ~5 minutes, below |
+| Confirms Google accepted each check-in | No (Google hides the reply from other sites) | Yes |
+| Stops duplicates | Per phone, once per day | Per phone, plus across phones and retries |
 
 ---
 
-## Connect the page to Google Apps Script (one time, ~5 minutes)
+## Optional: connect Google Apps Script (one time, ~5 minutes)
 
 Use a shared Heartfulness Google account if you can, so it doesn't depend on one person.
 

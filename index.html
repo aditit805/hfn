@@ -384,10 +384,40 @@
     render();
   };
 
-  // Posts to the Apps Script web app (see apps-script/Code.gs). text/plain keeps it a
-  // "simple" request, so the browser skips the CORS preflight Apps Script can't answer.
+  // Google Form field ids — must match apps-script/Code.gs and the live form.
+  var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSf67pPhWmi6ijQN7pnFZ0IAHqdsH5e-QiBujt1oHAC8knllDA/formResponse';
+  var F = { name: 'entry.537368111', lives: 'entry.701442255', city: 'entry.1820617848',
+            firstTime: 'entry.1621228157', heardFrom: 'entry.768898668' };
+
+  // Same answers and section path (pageHistory) the form itself would produce.
+  // Sections: 0 Name/Lives, 1 Overseas, 2 Session Details, 3 New Participant.
+  function formBody(p) {
+    var overseas = p.lives === 'Outside Singapore';
+    var body = new URLSearchParams();
+    var pages = [0];
+    body.append(F.name, String(p.name).trim());
+    body.append(F.lives, overseas ? 'Outside Singapore' : 'Singapore');
+    body.append(F.firstTime, p.firstTime ? 'Yes' : 'No');
+    if (overseas) { body.append(F.city, String(p.city || '').trim()); pages.push(1); }
+    pages.push(2);
+    if (p.firstTime) {
+      (p.heardFrom && p.heardFrom.length ? p.heardFrom : ['Other']).forEach(function (h) { body.append(F.heardFrom, h); });
+      pages.push(3);
+    }
+    body.append('pageHistory', pages.join(','));
+    return body;
+  }
+
+  // With an Apps Script link in config.js, post through it (it confirms Google accepted the
+  // response and blocks cross-phone duplicates). Without one, post straight to the form:
+  // Google hides the reply from other sites ("no-cors"), so a completed send counts as success.
   function send(payload) {
-    if (!API_URL) return Promise.resolve({ ok: false, error: 'Check-in is not set up yet (missing Apps Script link)' });
+    if (!API_URL) {
+      return fetch(FORM_URL, { method: 'POST', mode: 'no-cors', body: formBody(payload) })
+        .then(function () { return { ok: true }; });
+    }
+    // text/plain keeps it a "simple" request, so the browser skips the CORS preflight
+    // Apps Script can't answer.
     return fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
