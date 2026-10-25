@@ -18,6 +18,7 @@
     --gold: #e9b872; --ok: #3d8b6a; --ok-bg: rgba(220,240,230,.85); --err: #b3261e;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
   html, body { min-height: 100%; }
   body {
     margin: 0; color: var(--ink); font: 400 16px/1.5 Poppins, -apple-system, "Segoe UI", sans-serif;
@@ -55,9 +56,17 @@
   .breath { color: var(--navy-2); font-size: 13px; font-weight: 300; margin: 6px 0 0; opacity: .85; }
 
   .section-label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 4px 10px; }
-  .empty { background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-           border: 1px dashed rgba(23,62,95,.25); border-radius: 22px; padding: 26px 20px; text-align: center;
-           color: var(--muted); font-weight: 300; }
+  /* first-visit welcome: plain text and steps, deliberately not a box so it doesn't look tappable */
+  .empty { text-align: center; padding: 6px 8px 0; }
+  .empty h3 { font: italic 500 24px/1.2 "Cormorant Garamond", Georgia, serif; color: var(--navy); margin: 0 0 16px; }
+  .steps { list-style: none; padding: 0; margin: 0 auto; display: grid; gap: 12px; max-width: 290px; text-align: left; }
+  .steps li { display: flex; align-items: center; gap: 12px; font-size: 14.5px; color: var(--ink); }
+  .steps .n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+              background: rgba(43,95,140,.1); color: var(--navy); font-size: 13px; font-weight: 500; }
+  .empty .note { margin: 18px 0 0; font-size: 13px; font-weight: 300; color: var(--muted); }
+  /* with nobody saved yet, "Add someone" is the main action */
+  .bar #addBtn.lead { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; border: 0;
+                      padding: 17px; font-size: 17px; box-shadow: 0 10px 28px rgba(23,62,95,.28); }
 
   .person {
     display: flex; align-items: center; gap: 14px; width: 100%;
@@ -309,7 +318,11 @@
     $('listLabel').hidden = !people.length;
     var list = $('list');
     if (!people.length) {
-      list.innerHTML = '<div class="empty">Add yourself, and anyone you check in for.<br>This phone will remember them, so next time it’s just one tap.<br><br>Tap <b>＋ Add someone</b> below to begin.</div>';
+      list.innerHTML = '<div class="empty"><h3>First time here? Welcome.</h3><ol class="steps">' +
+        '<li><span class="n">1</span>Add yourself, and family if you like</li>' +
+        '<li><span class="n">2</span>Tap the names of who’s here</li>' +
+        '<li><span class="n">3</span>Press Check in — that’s it</li></ol>' +
+        '<p class="note">This phone remembers everyone for next time.</p></div>';
     } else {
       list.innerHTML = people.map(function (p) {
         var st = sendState[p.id] || '';
@@ -330,6 +343,8 @@
     var n = pending.filter(function (p) { return selected[p.id]; }).length;
     var sending = Object.keys(sendState).some(function (k) { return sendState[k] === 'sending'; });
     var btn = $('checkIn');
+    btn.hidden = !people.length;
+    $('addBtn').classList.toggle('lead', !people.length);
     btn.disabled = !n || sending;
     btn.textContent = sending ? 'Checking in…'
       : n ? 'Check in ' + n + (n === 1 ? ' person' : ' people')
